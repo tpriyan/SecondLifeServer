@@ -7,7 +7,7 @@ namespace TextureChanger.Logic
 {
     public class GridOperations
     {
-        
+
         public GridOperations()
         {
 
@@ -25,15 +25,15 @@ namespace TextureChanger.Logic
             return dt;
         }
 
-        public static void LoadData(System.Web.UI.WebControls.GridView gridView)
+        public static void LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
         {
             {
-                gridView.DataSource = ReadData();
+                gridView.DataSource = ReadData(_sessionState);
                 gridView.DataBind();
             }
         }
 
-        public static DataTable ReadData()
+        public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState)
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadAll;
             System.Data.DataTable dataTable = DataTable();
@@ -44,7 +44,7 @@ namespace TextureChanger.Logic
                 using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
                 {
                     con.Open();
-                    com.CommandText = sqlQueryRead;
+                    com.CommandText = String.Format(sqlQueryRead, _sessionState["owner"].ToString()) ;
                     using (System.Data.SQLite.SQLiteDataReader reader = com.ExecuteReader())
                     {
                         while (reader.Read())
@@ -63,17 +63,13 @@ namespace TextureChanger.Logic
 
             return dataTable;
         }
-
-        
-
-
     }
 
     public class BulkOperations
     {
-        public static void bulkSetThemeUnrented(string _themeName)
+        public static void bulkSetThemeUnrented(string _themeName, System.Web.SessionState.HttpSessionState _sessionState)
         {
-            DataTable table = GridOperations.ReadData();
+            DataTable table = GridOperations.ReadData(_sessionState);
 
             foreach (DataRow dr in table.Rows)
             {
@@ -87,7 +83,7 @@ namespace TextureChanger.Logic
 
     public class CRUDOperations
     {
-        public BaseEnums.URLStatus createOrUpdateURL(string objectGuid, string URL, string OwnerName, string type, string ObjectName)
+        public BaseEnums.URLStatus createOrUpdateURL(string objectGuid, string URL, string OwnerName, string type, string ObjectName, string rentalUnitId, string isInitialCall)
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadFilterObjectId;
             string sqlQueryInsert = TextureChanger.Constants.QueryInsert;
@@ -107,26 +103,49 @@ namespace TextureChanger.Logic
                     {
                         if (reader.Read())
                         {
-                            if (reader["URL"].ToString() == URL &&
-                               reader["Type"].ToString() == type &&
-                               reader["Name"].ToString() == ObjectName &&
-                               reader["Owner"].ToString() == OwnerName)
+                            if (isInitialCall != "yes")
                             {
-                                status = BaseEnums.URLStatus.AlreadyUpdate;
+                                if (reader["URL"].ToString() == URL &&
+                                   reader["Type"].ToString() == type &&
+                                   reader["Name"].ToString() == ObjectName &&
+                                   reader["Owner"].ToString() == OwnerName &&
+                                   reader["LinkedRentalUnitId"].ToString() == rentalUnitId)
+                                {
+                                    status = BaseEnums.URLStatus.AlreadyUpdate;
+                                }
+                                else
+                                {
+                                    reader.Close();
+                                    com.CommandText = String.Format(sqlQueryUpdate, URL, ObjectName, type, OwnerName, rentalUnitId, objectGuid);
+                                    com.ExecuteNonQuery();
+                                    status = BaseEnums.URLStatus.Updated;
+                                }
                             }
                             else
                             {
-                                reader.Close();
-                                com.CommandText = String.Format(sqlQueryUpdate, URL, ObjectName, type, OwnerName, objectGuid);
-                                com.ExecuteNonQuery();
-                                status = BaseEnums.URLStatus.Updated;
+                                if (reader["URL"].ToString() == URL &&
+                                    reader["Type"].ToString() == type &&
+                                reader["Name"].ToString() == ObjectName &&
+                                reader["Owner"].ToString() == OwnerName)
+                                {
+                                    status = BaseEnums.URLStatus.AlreadyUpdate;
+                                }
+                                else
+                                {
+                                    reader.Close();
+                                    com.CommandText = String.Format(TextureChanger.Constants.QueryUpdateNoLinkedUnit, URL, ObjectName, type, OwnerName, objectGuid);
+                                    
+                                    com.ExecuteNonQuery();
+                                    status = BaseEnums.URLStatus.Updated;
+                                }
+
                             }
 
                         }
                         else
                         {
                             reader.Close();
-                            com.CommandText = String.Format(sqlQueryInsert, objectGuid, URL, ObjectName, type, OwnerName);
+                            com.CommandText = String.Format(sqlQueryInsert, objectGuid, URL, ObjectName, type, OwnerName, rentalUnitId);
                             com.ExecuteNonQuery();
                             status = BaseEnums.URLStatus.Created;
                         }
@@ -136,7 +155,32 @@ namespace TextureChanger.Logic
             }
             return status;
         }
+
+
+        public static string getLinkedGUID(string objectGuid)
+        {
+            string sqlQueryRead = TextureChanger.Constants.QueryReadFilterObjectId;
+
+            using (System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("data source=" + HttpContext.Current.Server.MapPath("~/App_Data/" + TextureChanger.Variables.DatabaseName)))
+            {
+                using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
+                {
+                    con.Open();
+
+                    com.CommandText = String.Format(sqlQueryRead, objectGuid);
+
+                    using (System.Data.SQLite.SQLiteDataReader reader = com.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return reader["LinkedRentalUnitId"].ToString();
+
+                        }
+                    }
+                }
+            }
+
+            return "";
+        }
     }
-
-
 }

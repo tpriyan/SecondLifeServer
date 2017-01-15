@@ -8,8 +8,12 @@ public partial class _Default : System.Web.UI.Page
     TextureChanger.GlobalSettings s;
     protected void Page_Load(object sender, EventArgs e)
     {
+
+        if (!TextureChanger.SessionHandler.IsSessionValid(Session, Response))
+            Response.Redirect("Login.aspx");
+
         s = TextureChanger.Settings.getSettings();
-        TextureChanger.Logic.GridOperations.LoadData(GridView1);
+        TextureChanger.Logic.GridOperations.LoadData(GridView1, Session);
 
         
 
@@ -128,6 +132,6 @@ public partial class _Default : System.Web.UI.Page
 
     protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
     {
-        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage");
+        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage", Session);
     }
 }

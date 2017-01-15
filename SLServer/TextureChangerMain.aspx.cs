@@ -9,7 +9,8 @@ public partial class TextureChangerMain : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-
+        if (!TextureChanger.SessionHandler.IsSessionValid(Session, Response))
+            Response.Redirect("Login.aspx");
     }
 
     protected void BtnSettings_Click(object sender, EventArgs e)
@@ -25,6 +26,6 @@ public partial class TextureChangerMain : System.Web.UI.Page
 
     protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
     {
-        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage");
+        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage", Session);
     }
 }

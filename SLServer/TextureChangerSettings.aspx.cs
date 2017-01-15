@@ -9,6 +9,8 @@ public partial class TextureChangerSettings : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!TextureChanger.SessionHandler.IsSessionValid(Session, Response))
+            Response.Redirect("Login.aspx");
         if (!IsPostBack)
         {
             TextureChanger.GlobalSettings s = TextureChanger.Settings.getSettings();
@@ -18,6 +20,7 @@ public partial class TextureChangerSettings : System.Web.UI.Page
             skipSkyboxThemesFetch.Checked = s.skipSkyboxThemesFetch;
             themes.Text = s.themes;
         }
+        
     }
 
 
