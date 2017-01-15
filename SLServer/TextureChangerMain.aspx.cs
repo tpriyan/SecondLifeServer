@@ -28,4 +28,10 @@ public partial class TextureChangerMain : System.Web.UI.Page
     {
         TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage", Session);
     }
+
+    protected void BtnSignOut_Click(object sender, EventArgs e)
+    {
+        Session.Clear();
+        Response.Redirect("Login.aspx");
+    }
 }

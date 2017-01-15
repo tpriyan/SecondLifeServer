@@ -44,7 +44,7 @@ namespace TextureChanger.Logic
                 using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
                 {
                     con.Open();
-                    com.CommandText = String.Format(sqlQueryRead, _sessionState["owner"].ToString()) ;
+                    com.CommandText = String.Format(sqlQueryRead, _sessionState["ownerid"].ToString()) ;
                     using (System.Data.SQLite.SQLiteDataReader reader = com.ExecuteReader())
                     {
                         while (reader.Read())
