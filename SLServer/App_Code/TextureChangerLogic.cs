@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Web;
 using TextureChanger.BaseTypes;
+using System.Data;
 
 namespace TextureChanger.Logic
 {
@@ -12,7 +13,7 @@ namespace TextureChanger.Logic
 
         }
 
-        public System.Data.DataTable DataTable()
+        public static DataTable DataTable()
         {
             System.Data.DataTable dt = new System.Data.DataTable();
             dt.Columns.Add("ObjectGUID");
@@ -24,10 +25,18 @@ namespace TextureChanger.Logic
             return dt;
         }
 
-        public void LoadData(System.Web.UI.WebControls.GridView gridView)
+        public static void LoadData(System.Web.UI.WebControls.GridView gridView)
+        {
+            {
+                gridView.DataSource = ReadData();
+                gridView.DataBind();
+            }
+        }
+
+        public static DataTable ReadData()
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadAll;
-            System.Data.DataTable dataTable = this.DataTable();
+            System.Data.DataTable dataTable = DataTable();
             System.Data.DataRow dataRow = null;
 
             using (System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("data source=" + HttpContext.Current.Server.MapPath("~/App_Data/" + TextureChanger.Variables.DatabaseName)))
@@ -52,13 +61,30 @@ namespace TextureChanger.Logic
                 }
             }
 
-            gridView.DataSource = dataTable;
-            gridView.DataBind();
-
+            return dataTable;
         }
+
+        
 
 
     }
+
+    public class BulkOperations
+    {
+        public static void bulkSetThemeUnrented(string _themeName)
+        {
+            DataTable table = GridOperations.ReadData();
+
+            foreach (DataRow dr in table.Rows)
+            {
+                if (HTTPLogic.isRented(dr["URL"].ToString()) == 1) // not rented
+                {
+                    HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
+                }
+            }
+        }
+    }
+
     public class CRUDOperations
     {
         public BaseEnums.URLStatus createOrUpdateURL(string objectGuid, string URL, string OwnerName, string type, string ObjectName)
@@ -111,4 +137,6 @@ namespace TextureChanger.Logic
             return status;
         }
     }
+
+
 }

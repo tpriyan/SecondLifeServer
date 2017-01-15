@@ -12,15 +12,16 @@
             <h1>Units List</h1>
         </div>
         <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" OnRowDataBound="GridView1_RowDataBound" Width="80%" HorizontalAlign="Center" 
-            HeaderStyle-Font-Bold="true" AllowPaging ="true" >
+            HeaderStyle-Font-Bold="true"  >
             <Columns>
                 <asp:TemplateField ItemStyle-Width ="25%">
                     <HeaderTemplate>
                         <asp:Label ID="Label5" runat="server" Text='Name'></asp:Label>
-                        <asp:HiddenField ID="IdHiddenURL" runat="server" Value='<%#Bind("URL") %>'></asp:HiddenField>
+                        
                     </HeaderTemplate>
                     <ItemTemplate>
                         <asp:Label ID="Label6" runat="server" Text='<%#Bind("Name") %>'></asp:Label>
+                        <asp:HiddenField ID="IdHiddenURL" runat="server" Value='<%#Bind("URL") %>'></asp:HiddenField>
                     </ItemTemplate>
 
 
@@ -75,6 +76,9 @@
 
 <HeaderStyle Font-Bold="True"></HeaderStyle>
         </asp:GridView>
+        <br />
+        <br />
+      <center>  <asp:Button ID="BtnSetDefaultTheme" runat="server" Text="Set all --NOT RENTED-- units to Vintage" OnClick="BtnSetDefaultTheme_Click" /></center>
 
     </form>
 </body>

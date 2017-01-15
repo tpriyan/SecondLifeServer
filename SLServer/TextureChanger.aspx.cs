@@ -5,25 +5,24 @@ using System.Collections.Specialized;
 
 public partial class _Default : System.Web.UI.Page
 {
+    TextureChanger.GlobalSettings s;
     protected void Page_Load(object sender, EventArgs e)
     {
-        TextureChanger.Logic.GridOperations gridOperations = new TextureChanger.Logic.GridOperations();
+        s = TextureChanger.Settings.getSettings();
+        TextureChanger.Logic.GridOperations.LoadData(GridView1);
 
-        gridOperations.LoadData(GridView1);
-
-        if (!IsPostBack)
-        {
-        }
         
+
     }
-   
+
     protected void GridView1_RowDataBound(object sender, GridViewRowEventArgs e)
     {
         string url = string.Empty;
+        int rented = -100;
 
         if (e.Row.RowType == DataControlRowType.DataRow)
         {
-            DataRowView dr =  (DataRowView) e.Row.DataItem;
+            DataRowView dr = (DataRowView)e.Row.DataItem;
 
             DataRow dataRow = dr.Row;
 
@@ -31,32 +30,12 @@ public partial class _Default : System.Web.UI.Page
 
             if (e.Row.RowState != DataControlRowState.Edit)
             {
-                PlaceHolder ph3 = (PlaceHolder)e.Row.FindControl("PlaceHolder3");
-                string[] tmp = TextureChanger.HTTPLogic.getAllThemes(url);
-                for(int i=0;i< tmp.Length; i++)
-                {
-                    Button b1 = new Button();
-                    b1.Text = tmp[i];
-                    b1.Click += new EventHandler(this.TextureChange_Click);
-                    ph3.Controls.Add(b1);
-                }
-                if(tmp.Length == 0)
-                {
-                    Label l = new Label();
-                    l.Text = "No themes";
-                    ph3.Controls.Add(l);
-                }
-
-                PlaceHolder ph1 = (PlaceHolder)e.Row.FindControl("PlaceHolder1");
-
-                Label l2 = new Label();
-                l2.Text = TextureChanger.HTTPLogic.getCurrentTexture(url);
-                ph1.Controls.Add(l2);
 
                 PlaceHolder ph2 = (PlaceHolder)e.Row.FindControl("PlaceHolder2");
 
                 Label l1 = new Label();
-                switch(TextureChanger.HTTPLogic.isRented(url))
+                rented = TextureChanger.HTTPLogic.isRented(url);
+                switch (rented)
                 {
                     case 0:
                         l1.Text = "Not linked";
@@ -74,9 +53,58 @@ public partial class _Default : System.Web.UI.Page
                 }
                 ph2.Controls.Add(l1);
 
+                PlaceHolder ph3 = (PlaceHolder)e.Row.FindControl("PlaceHolder3");
+                string[] tmp;
+                if (s.skipSkyboxThemesFetch)
+                {
+                    //Label l = new Label();
+                    // l.Text = "Skipped in settings";
+                    // ph3.Controls.Add(l);
+
+                    tmp = s.themes.Split(',');
+                }
+                else
+                {
+
+
+                    tmp = TextureChanger.HTTPLogic.getAllThemes(url);
+                }
+                for (int i = 0; i < tmp.Length; i++)
+                {
+                    Button b1 = new Button();
+                    b1.Text = tmp[i];
+                    b1.Click += new EventHandler(this.TextureChange_Click);
+                    ph3.Controls.Add(b1);
+                }
+                if (tmp.Length == 0)
+                {
+                    Label l = new Label();
+                    l.Text = "No themes";
+                    ph3.Controls.Add(l);
+                }
+
+                PlaceHolder ph1 = (PlaceHolder)e.Row.FindControl("PlaceHolder1");
+
+                if (s.skipFetchCurrentTheme || (s.skipFetchThemeDataForRentedBoxes && (rented == 2)))
+                {
+                    Label l = new Label();
+                    l.Text = "Skipped in settings";
+                    ph1.Controls.Add(l);
+                }
+                else
+                {
+                    Label l2 = new Label();
+                    l2.Text = TextureChanger.HTTPLogic.getCurrentTexture(url);
+                    ph1.Controls.Add(l2);
+                }
             }
+
+
+
+
         }
     }
+
 
     protected void TextureChange_Click(object sender, EventArgs e)
     {
@@ -86,7 +114,7 @@ public partial class _Default : System.Web.UI.Page
         //Get the row that contains this button
         GridViewRow gvr = (GridViewRow)btn.NamingContainer;
 
-        HiddenField field = (HiddenField) gvr.FindControl("IdHiddenURL");
+        HiddenField field = (HiddenField)gvr.FindControl("IdHiddenURL");
 
         string url = field.Value.ToString();
 
@@ -95,6 +123,11 @@ public partial class _Default : System.Web.UI.Page
 
     }
 
-    
 
+
+
+    protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
+    {
+        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage");
+    }
 }
