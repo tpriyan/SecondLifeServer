@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-public partial class TextureChangerMain : System.Web.UI.Page
+public partial class TextureChangerSetDefTheme : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -13,20 +13,15 @@ public partial class TextureChangerMain : System.Web.UI.Page
             Response.Redirect("Login.aspx");
     }
 
-    protected void BtnSettings_Click(object sender, EventArgs e)
+    protected void Button1_Click(object sender, EventArgs e)
     {
-        Response.Redirect("TextureChangerSettings.aspx");
-
+        
+        TextureChanger.Logic.BulkOperations.bulkSetThemeUnrentedAsync(Session, TextBox1.Text);
     }
 
-    protected void BtnViewUnits_Click(object sender, EventArgs e)
+    protected void Button2_Click(object sender, EventArgs e)
     {
-        Response.Redirect("TextureChanger.aspx");
-    }
-
-    protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
-    {
-        Response.Redirect("TextureChangerSetDefTheme.aspx");
+        Response.Redirect("TextureChangerMain.aspx");
     }
 
     protected void BtnSignOut_Click(object sender, EventArgs e)

@@ -45,7 +45,9 @@
                     </HeaderTemplate>
                     <ItemTemplate>
                         <asp:PlaceHolder ID="PlaceHolder1" runat="server">
+                             
                         </asp:PlaceHolder>
+                        <asp:Label ID="Label100" runat="server" Text='<%#Bind("CurrentTheme") %>'></asp:Label>
                     </ItemTemplate>
                      
                 </asp:TemplateField>
@@ -57,7 +59,7 @@
                     </HeaderTemplate>
                     <ItemTemplate>
                         <asp:PlaceHolder ID="PlaceHolder2" runat="server"></asp:PlaceHolder>
-
+                        <asp:Label ID="Label101" runat="server" Text='<%#Bind("RentedStatus") %>'></asp:Label>
                     </ItemTemplate>
                     
                 </asp:TemplateField>
@@ -69,6 +71,7 @@
                     <ItemTemplate>
                         <asp:PlaceHolder ID="PlaceHolder3" runat="server">
                         </asp:PlaceHolder>
+                        <asp:Label ID="Label102" runat="server" Text='<%#Bind("ThemesAvailable") %>'></asp:Label>
                     </ItemTemplate>
                     
                 </asp:TemplateField>
@@ -77,11 +80,18 @@
 
 <HeaderStyle Font-Bold="True"></HeaderStyle>
         </asp:GridView>
+            <br />
+            <asp:Button ID="BtnReloadData" runat="server" Text="Reload data" OnClick="BtnReloadData_Click" />
         <br />
         <br />
             </div>
         <div align ="center">
-      <center>  <asp:Button ID="BtnSetDefaultTheme" runat="server" Text="Set all --NOT RENTED-- units to Vintage" OnClick="BtnSetDefaultTheme_Click" /></center>
+      <center>  
+          <asp:Button ID="BtnHome" runat="server" Text="Home" OnClick="BtnHome_Click" />
+            <br />
+          <br />
+          <asp:Button ID="BtnSignOut" runat="server" OnClick="BtnSignOut_Click" Text="Sign out" Width="300px" />
+            </center>
         </div>
     </form>
 </body>

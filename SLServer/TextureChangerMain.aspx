@@ -21,10 +21,10 @@
         <asp:Button ID="BtnViewUnits" runat="server" Text="View units" OnClick="BtnViewUnits_Click" Width="300px" />
         <br />
         <br />
-        <asp:Button ID="BtnSettings" runat="server" Text="Settings" OnClick="BtnSettings_Click" style="text-align: center" Width="300px" />
+        <asp:Button ID="BtnSettings" runat="server" Text="Settings" OnClick="BtnSettings_Click" style="text-align: center" Width="300px" Visible ="false" />
         <br />
         <br />
-        <asp:Button ID="BtnSetDefaultTheme" runat="server" Text="Set all not rented units to Vintage" OnClick="BtnSetDefaultTheme_Click" Width="300px" />
+        <asp:Button ID="BtnSetDefaultTheme" runat="server" Text="Bulk set themes" OnClick="BtnSetDefaultTheme_Click" Width="300px" />
         <br />
         <br />
         <asp:Button ID="BtnSignOut" runat="server" Text="Sign out" Width="300px" OnClick="BtnSignOut_Click" />

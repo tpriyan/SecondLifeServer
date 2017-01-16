@@ -7,14 +7,8 @@ using System.Threading.Tasks;
 
 namespace TextureChanger.Logic
 {
-    public class GridOperations
+    public class DataBaseStaging
     {
-
-        public GridOperations()
-        {
-
-        }
-
         private static DataTable DataTableLinkedUnits()
         {
             System.Data.DataTable dt = new System.Data.DataTable();
@@ -33,17 +27,81 @@ namespace TextureChanger.Logic
             dt.Columns.Add("Name");
             dt.Columns.Add("Type");
             dt.Columns.Add("Owner");
+            dt.Columns.Add("CurrentTheme");
+            dt.Columns.Add("RentedStatus");
+            dt.Columns.Add("ThemesAvailable");
+            dt.Columns.Add("DefTheme");
+
 
             return dt;
         }
 
-        public static void LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
+        public static async Task<Boolean> LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
         {
+            GlobalSettings settings = Settings.getSettings();
+            DataTable dt = ReadData(_sessionState);
+            List<Task> TaskList = new List<Task>();
+
+            foreach (DataRow dr in dt.Rows)
             {
-                gridView.DataSource = ReadData(_sessionState);
-                gridView.DataBind();
+                    var LastTask = Task.Run(() => doFetchInfo(dr, settings));
+                    TaskList.Add(LastTask);
             }
+
+            Task.WaitAll(TaskList.ToArray());
+
+
+            gridView.DataSource = dt;
+            gridView.DataBind();
+            
+
+            return true;
         }
+
+        public static void doFetchInfo(DataRow dr, GlobalSettings settings)
+        {
+            
+            Int32 rented = 0;
+            rented = TextureChanger.HTTPLogic.isRented(dr["URL"].ToString());
+            switch (rented)
+            {
+                case 0:
+                    dr["RentedStatus"] = "Not linked";
+                    break;
+                case 1:
+                    dr["RentedStatus"] = "Not Rented";
+                    break;
+                case 2:
+                    dr["RentedStatus"] = "Rented";
+                    break;
+                default:
+                    dr["RentedStatus"] = "Error";
+                    break;
+
+            }
+
+            string[] tmp;
+            if (settings.skipSkyboxThemesFetch)
+            {
+                tmp = settings.themes.Split(',');
+            }
+            else
+            {
+                tmp = TextureChanger.HTTPLogic.getAllThemes(dr["URL"].ToString());
+            }
+            dr["ThemesAvailable"] = string.Join(",", tmp);
+
+
+            if (settings.skipFetchCurrentTheme || (settings.skipFetchThemeDataForRentedBoxes && (rented == 2)))
+            {
+               
+                dr["CurrentTheme"] = "Skipped in settings";
+            }
+            else
+                dr["CurrentTheme"] = TextureChanger.HTTPLogic.getCurrentTexture(dr["URL"].ToString());
+
+            }
+        
 
         public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState)
         {
@@ -66,7 +124,8 @@ namespace TextureChanger.Logic
                             dataRow[1] = reader.GetValue(1);
                             dataRow[2] = reader.GetValue(2);
                             dataRow[3] = reader.GetValue(3);
-
+                            if(reader["DefTheme"] != null)
+                                dataRow["DefTheme"] = reader["DefTheme"].ToString();
                             dataTable.Rows.Add(dataRow);
                         }
                     }
@@ -117,9 +176,10 @@ namespace TextureChanger.Logic
     
     public class BulkOperations
     {
-        public static async Task<Boolean> bulkSetThemeUnrentedAsync(string _themeName, System.Web.SessionState.HttpSessionState _sessionState)
+        public static async Task<Boolean> bulkSetThemeUnrentedAsync(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
         {
-            DataTable table = GridOperations.ReadData(_sessionState);
+
+            DataTable table = DataBaseStaging.ReadData(_sessionState);
             
             List<Task> TaskList = new List<Task>();
 
@@ -144,10 +204,17 @@ namespace TextureChanger.Logic
 
             if (HTTPLogic.isRented(dr["URL"].ToString()) == 1) // not rented
             {
-                HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
+                if (_themeName == "")
+                {
+                    if(dr["DefTheme"] != null)
+                        _themeName = dr["DefTheme"].ToString();
+                }
+                    
+                if(_themeName != "")
+                    HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
 
                 // reset the nearby objects
-                linkedUnits = GridOperations.readLinkedData(dr[0].ToString(), path);
+                linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString(), path);
                 foreach (DataRow dr1 in linkedUnits.Rows)
                 {
                     HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
@@ -156,19 +223,21 @@ namespace TextureChanger.Logic
             }
         }
 
-        public static void bulkSetThemeUnrented(string _themeName, System.Web.SessionState.HttpSessionState _sessionState)
+        public static void bulkSetThemeUnrented(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
         {
-            DataTable table = GridOperations.ReadData(_sessionState);
+            DataTable table = DataBaseStaging.ReadData(_sessionState);
             DataTable linkedUnits = null;
 
             foreach (DataRow dr in table.Rows)
             {
                 if (HTTPLogic.isRented(dr["URL"].ToString()) == 1) // not rented
                 {
+                    if (_themeName == "")
+                        _themeName = dr["DefTheme"].ToString();
                     HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
 
                     // reset the nearby objects
-                    linkedUnits = GridOperations.readLinkedData(dr[0].ToString());
+                    linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString());
                     foreach (DataRow dr1 in linkedUnits.Rows)
                     {
                         HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
