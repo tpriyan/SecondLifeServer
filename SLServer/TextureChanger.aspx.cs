@@ -133,5 +133,6 @@ public partial class _Default : System.Web.UI.Page
     protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
     {
         TextureChanger.Logic.BulkOperations.bulkSetThemeUnrented("Vintage", Session);
+        TextureChanger.Logic.GridOperations.LoadData(GridView1, Session);
     }
 }

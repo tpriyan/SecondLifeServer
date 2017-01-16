@@ -11,15 +11,31 @@ public partial class CreateOrUpdate : System.Web.UI.Page
              && Request.Params["IsInitialCall"] != null
             && Request.Params["LinkedRentalUnitId"] != null)
         {
-            TextureChanger.Logic.CRUDOperations operations = new TextureChanger.Logic.CRUDOperations();
-
-            operations.createOrUpdateURL(Request.Params["objectguid"].ToString(),
+            try
+            {
+                TextureChanger.Logic.CRUDOperations.createOrUpdateURL(Request.Params["objectguid"].ToString(),
                                          Request.Params["slurl"].ToString(),
                                          Request.Params["owner"].ToString(),
                                          Request.Params["type"].ToString(),
                                          Request.Params["name"].ToString(),
                                         Request.Params["LinkedRentalUnitId"].ToString(),
                                         Request.Params["isinitialcall"].ToString());
+
+
+                Response.Write("OK");
+                Response.Flush();
+                Response.SuppressContent = true;
+            }
+            catch
+            {
+                Response.Write("NOTOK");
+                Response.Flush();
+                Response.SuppressContent = true;
+            }
+
+            
+
+            
         }
     }
 }

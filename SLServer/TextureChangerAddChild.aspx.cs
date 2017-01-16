@@ -5,18 +5,22 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-public partial class TextureChangerGetLinkedUnit : System.Web.UI.Page
+public partial class TextureChangerAddChild : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        if 
-             (Request.Params["objectguid"] != null)
-            
-           
+        if (Request.Params["objectguid"] != null
+            && Request.Params["childobject"] != null
+            && Request.Params["defaulttheme"] != null)
+             
         {
             try
             {
-                Response.Write(TextureChanger.Logic.CRUDOperations.getLinkedRentalUnitGUID(Request.Params["objectguid"].ToString()));
+                TextureChanger.Logic.CRUDOperations.addLinkedUnit(Request.Params["objectguid"].ToString(),
+                                Request.Params["childobject"].ToString(),
+                                Request.Params["defaulttheme"].ToString());
+
+                Response.Write("OK");
                 Response.Flush();
                 Response.SuppressContent = true;
             }
@@ -26,9 +30,6 @@ public partial class TextureChangerGetLinkedUnit : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            
-           
-            
         }
     }
 }

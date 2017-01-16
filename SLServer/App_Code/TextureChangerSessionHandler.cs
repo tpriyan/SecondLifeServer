@@ -20,7 +20,7 @@ namespace TextureChanger
             {
                 DateTime dt = DateTime.Parse(_sessionState["lastactivetime"].ToString());
 
-                if(DateTime.UtcNow > dt.AddMinutes(5) )
+                if(DateTime.UtcNow > dt.AddMinutes(15) )
                          
                 {
                     _sessionState["ownerid"] = null;
@@ -39,7 +39,7 @@ namespace TextureChanger
 
         public static void InitState(System.Web.SessionState.HttpSessionState _sessionState)
         {
-            _sessionState["ownerid"] = "";
+            _sessionState["ownerid"] = null;
             _sessionState["logintime"] = DateTime.UtcNow;
             _sessionState["lastactivetime"] = DateTime.UtcNow;
         }

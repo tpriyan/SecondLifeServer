@@ -105,5 +105,22 @@ namespace TextureChanger
             }
             return x;
         }
+
+        public static string setNearbyTheme(string _nearbyObjectGUID, string _url, string _themeName)
+        {
+            string x = "Error";
+
+            try
+            {
+                var response = HTTPLogic.Post(_url, new NameValueCollection() { { "action", "setnearbyobjecttheme" }, { "nearbyguid", _nearbyObjectGUID }, { "texturename", _themeName } });
+
+                x = System.Text.Encoding.UTF8.GetString(response);
+            }
+            catch
+            {
+
+            }
+            return x;
+        }
     }
 }

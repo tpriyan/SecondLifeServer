@@ -8,9 +8,10 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <div>
+        <div align="center">
             <h1>Units List</h1>
         </div>
+        <div align="center">
         <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" OnRowDataBound="GridView1_RowDataBound" Width="80%" HorizontalAlign="Center" 
             HeaderStyle-Font-Bold="true"  >
             <Columns>
@@ -78,8 +79,10 @@
         </asp:GridView>
         <br />
         <br />
+            </div>
+        <div align ="center">
       <center>  <asp:Button ID="BtnSetDefaultTheme" runat="server" Text="Set all --NOT RENTED-- units to Vintage" OnClick="BtnSetDefaultTheme_Click" /></center>
-
+        </div>
     </form>
 </body>
 </html>

@@ -17,9 +17,14 @@
 <body>
   <form runat="server" id ="Form1">
 
-     
-      <asp:Login ID = "Login1" runat = "server" OnAuthenticate= "ValidateUser" ></asp:Login>
+     <div align="center">
+         <h1> Login to rentals</h1>
 
+     </div>
+
+       <div align="center">
+      <asp:Login ID = "Login1" runat = "server" OnAuthenticate= "ValidateUser" ></asp:Login>
+</div>
   </form>
    
 
