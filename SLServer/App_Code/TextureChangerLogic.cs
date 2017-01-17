@@ -5,10 +5,37 @@ using System.Data;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+namespace TextureChanger
+{
+    public class GlobalSettings
+    {
+        public Boolean skipSkyboxThemesFetch, skipFetchThemeDataForRentedBoxes, skipFetchCurrentTheme;
+        public string themes;
+
+        public static GlobalSettings getSettings()
+        {
+            return new GlobalSettings() { skipFetchCurrentTheme = false, skipSkyboxThemesFetch = true, skipFetchThemeDataForRentedBoxes = false, themes = "Theme 1,Theme 2" };
+        }
+    }
+}
+
 namespace TextureChanger.Logic
 {
+    public class GlobalSettings
+    {
+        public Boolean skipSkyboxThemesFetch, skipFetchThemeDataForRentedBoxes, skipFetchCurrentTheme;
+        public string themes;
+
+        public static GlobalSettings getSettings()
+        {
+            return new GlobalSettings() { skipFetchCurrentTheme = false, skipSkyboxThemesFetch = true, skipFetchThemeDataForRentedBoxes = false, themes = "Theme 1,Theme 2" };
+        }
+    }
+
     public class DataBaseStaging
     {
+        // temp
+
         private static DataTable DataTableLinkedUnits()
         {
             System.Data.DataTable dt = new System.Data.DataTable();
@@ -36,9 +63,9 @@ namespace TextureChanger.Logic
             return dt;
         }
 
-        public static async Task<Boolean> LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
+        /*public static async Task<Boolean> LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
         {
-            GlobalSettings settings = Settings.getSettings();
+            GlobalSettings settings = GlobalSettings.getSettings();
             DataTable dt = ReadData(_sessionState);
             List<Task> TaskList = new List<Task>();
 
@@ -100,8 +127,68 @@ namespace TextureChanger.Logic
             else
                 dr["CurrentTheme"] = TextureChanger.HTTPLogic.getCurrentTexture(dr["URL"].ToString());
 
+            }*/
+
+
+        public static DataTable LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
+        {
+            GlobalSettings settings = GlobalSettings.getSettings();
+            DataTable dt = ReadData(_sessionState);
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                Int32 rented = 0;
+                rented = TextureChanger.HTTPLogic.isRented(dr["URL"].ToString());
+                switch (rented)
+                {
+                    case 0:
+                        dr["RentedStatus"] = "Not linked";
+                        break;
+                    case 1:
+                        dr["RentedStatus"] = "Not Rented";
+                        break;
+                    case 2:
+                        dr["RentedStatus"] = "Rented";
+                        break;
+                    default:
+                        dr["RentedStatus"] = "Error";
+                        break;
+
+                }
+
+                string[] tmp;
+                if (settings.skipSkyboxThemesFetch)
+                {
+                    tmp = settings.themes.Split(',');
+                }
+                else
+                {
+                    tmp = TextureChanger.HTTPLogic.getAllThemes(dr["URL"].ToString());
+                }
+                dr["ThemesAvailable"] = string.Join(",", tmp);
+
+
+                if (settings.skipFetchCurrentTheme || (settings.skipFetchThemeDataForRentedBoxes && (rented == 2)))
+                {
+
+                    dr["CurrentTheme"] = "Skipped in settings";
+                }
+                else
+                    dr["CurrentTheme"] = TextureChanger.HTTPLogic.getCurrentTexture(dr["URL"].ToString());
+
             }
+
+            gridView.DataSource = dt;
+            gridView.DataBind();
+            return dt;
+        }
+
         
+
+
+           
+        
+
 
         public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState)
         {
@@ -131,7 +218,7 @@ namespace TextureChanger.Logic
                     }
                 }
             }
-
+            dataTable.DefaultView.Sort = "Name ASC";
             return dataTable;
         }
 
