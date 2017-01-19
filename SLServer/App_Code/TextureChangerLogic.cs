@@ -32,11 +32,28 @@ namespace TextureChanger.Logic
             dt.Columns.Add("ThemesAvailable");
             dt.Columns.Add("DefTheme");
 
+            return dt;
+        }
+
+        public static  DataTable GetUnitsDataTable(System.Web.SessionState.HttpSessionState _sessionState)
+        {
+            GlobalSettings settings = Settings.getSettings();
+            DataTable dt = ReadData(_sessionState);
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+
+                dr["CurrentTheme"] = details.currentTexture;
+                dr["RentedStatus"] = details.rented;
+                dr["ThemesAvailable"] = details.themesList;
+            }
 
             return dt;
         }
 
-        public static async Task<Boolean> LoadData(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
+        #region ObsoleteCode
+        public static async Task<Boolean> LoadDataAsync(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
         {
             GlobalSettings settings = Settings.getSettings();
             DataTable dt = ReadData(_sessionState);
@@ -101,8 +118,8 @@ namespace TextureChanger.Logic
                 dr["CurrentTheme"] = TextureChanger.HTTPLogic.getCurrentTexture(dr["URL"].ToString());
 
             }
-        
 
+        #endregion
         public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState, string ownerId = "")
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadAll;
@@ -142,14 +159,11 @@ namespace TextureChanger.Logic
             return dataTable;
         }
 
-        
-
         public static DataTable readLinkedData(string _objectGUID, string databasePath = "")
         {
             DataTable dt = DataTableLinkedUnits();
 
             string sqlQueryRead = "select * from DefTextureLinkedObjects where ObjectGuid = '{0}'";
-            string path = "";
 
             System.Data.DataRow dataRow = null;
             if(databasePath == "")
@@ -419,8 +433,6 @@ namespace TextureChanger.Logic
                         }
                         else
                         {
-
-
                             reader.Close();
                             com.CommandText = String.Format(sqlQueryInsert, _sourceGUID, _childGUID, _theme);
 
@@ -429,14 +441,8 @@ namespace TextureChanger.Logic
                         }
 
                     }
-
-
-
                 }
             }
-
-
-
             return status;
         }
     }

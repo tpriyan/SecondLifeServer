@@ -5,32 +5,27 @@ using System.Collections.Specialized;
 
 public partial class _Default : System.Web.UI.Page
 {
-    TextureChanger.GlobalSettings s;
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!TextureChanger.SessionHandler.IsSessionValid(Session, Response))
             Response.Redirect("Login.aspx");
 
-        //if (!IsPostBack)
+        if (!IsPostBack)
         {
-            
-
-            //s = TextureChanger.Settings.getSettings();
-            TextureChanger.Logic.DataBaseStaging.LoadData(GridView1, Session);
+            loadData();
         }
-       // else
+        else
         {
-            //GridView1.DataBind();
+            if(ViewState["Table"] != null)
+            {
+                GridView1.DataSource = (DataTable) ViewState["Table"];
+                GridView1.DataBind();
+            }
         }
-
-        
-
     }
 
     protected void GridView1_RowDataBound(object sender, GridViewRowEventArgs e)
     {
-
-
         if (e.Row.RowType == DataControlRowType.DataRow)
         {
             PlaceHolder ph3 = (PlaceHolder)e.Row.FindControl("PlaceHolder3");
@@ -38,9 +33,7 @@ public partial class _Default : System.Web.UI.Page
 
             string[] tmp = l1.Text.ToString().Split(',');
 
-
             l1.Text = "";
-
 
             for (int i = 0; i < tmp.Length; i++)
             {
@@ -56,10 +49,7 @@ public partial class _Default : System.Web.UI.Page
                 ph3.Controls.Add(l);
             }
         }
-
-     
     }
-
 
     protected void TextureChange_Click(object sender, EventArgs e)
     {
@@ -74,22 +64,13 @@ public partial class _Default : System.Web.UI.Page
         string url = field.Value.ToString();
 
         TextureChanger.HTTPLogic.setTheme(btn.Text, url);
-        TextureChanger.Logic.DataBaseStaging.LoadData(GridView1, Session);
 
-    }
-
-
-
-
-    protected void BtnSetDefaultTheme_Click(object sender, EventArgs e)
-    {
-       // TextureChanger.Logic.BulkOperations.bulkSetThemeUnrentedAsync("Vintage", Session);
-      //  TextureChanger.Logic.DataBaseStaging.LoadData(GridView1, Session);
+        loadData();
     }
 
     protected void BtnReloadData_Click(object sender, EventArgs e)
     {
-        TextureChanger.Logic.DataBaseStaging.LoadData(GridView1, Session);
+        loadData();
     }
 
     protected void BtnHome_Click(object sender, EventArgs e)
@@ -101,5 +82,92 @@ public partial class _Default : System.Web.UI.Page
     {
         Session.Clear();
         Response.Redirect("Login.aspx");
+    }
+
+    protected void GridView1_PageIndexChanging(object sender, GridViewPageEventArgs e)
+    {
+        GridView1.DataSource = (DataTable) ViewState["Table"];
+        GridView1.PageIndex = e.NewPageIndex;
+        GridView1.DataBind();
+    }
+
+    private void loadData()
+    {
+        DataTable dt = TextureChanger.Logic.DataBaseStaging.GetUnitsDataTable(Session);
+        ViewState["Table"] = dt;
+        if (this.ViewState["SortExpression"] != null)
+        {
+            dt.DefaultView.Sort = string.Format("{0} {1}", ViewState["SortExpression"].ToString(), this.ViewState["SortOrder"].ToString());
+        }
+        GridView1.DataSource = dt;
+        GridView1.DataBind();
+    }
+
+    protected void GridView1_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        
+        if (e.CommandName.Equals("Sort"))
+        {
+            if (ViewState["SortExpression"] != null)
+            {
+                if (this.ViewState["SortExpression"].ToString() == e.CommandArgument.ToString())
+                {
+                    if (ViewState["SortOrder"].ToString() == "ASC")
+                        ViewState["SortOrder"] = "DESC";
+                    else
+                        ViewState["SortOrder"] = "ASC";
+                }
+                else
+                {
+                    ViewState["SortOrder"] = "ASC";
+                    ViewState["SortExpression"] = e.CommandArgument.ToString();
+                }
+
+            }
+            else
+            {
+                ViewState["SortExpression"] = e.CommandArgument.ToString();
+                ViewState["SortOrder"] = "ASC";
+            }
+        }
+        //Re Bind The Grid to reflect the Sort Order
+        loadData();
+    
+    }
+
+    protected void GridView1_RowCreated(object sender, GridViewRowEventArgs e)
+    {
+        if (ViewState["SortExpression"] == null)
+            return;
+
+        if (e.Row != null && e.Row.RowType == DataControlRowType.Header)
+        {
+            foreach (TableCell cell in e.Row.Cells)
+            {
+                if (cell.HasControls())
+                {
+                    if (cell.Controls[1] is LinkButton)
+                    {
+                        LinkButton btn = (LinkButton)cell.Controls[1];
+                        Image img = new Image();
+                        img.Width = 10;
+                        img.Height = 10;
+                        img.ImageUrl = "";
+                        if (ViewState["SortExpression"].ToString() == btn.CommandArgument)
+                        {
+                            if (ViewState["SortOrder"].ToString() == "ASC")
+                            {
+                                img.ImageUrl = "images/view_sort_ascending.png";
+                            }
+                            else
+                            {
+                                img.ImageUrl = "images/view_sort_descending.png";
+                            }
+                            cell.Controls.Add(img);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -4,6 +4,20 @@ using System;
 
 namespace TextureChanger
 {
+    public class UnitDetails
+    {
+        public string rented;
+        public string currentTexture;
+        public string[] themesList;
+
+        public UnitDetails()
+        {
+            rented = "Error";
+            currentTexture = "Error";
+        }
+         
+    }
+
     public class HTTPLogic
     {
         public HTTPLogic()
@@ -121,6 +135,66 @@ namespace TextureChanger
 
             }
             return x;
+        }
+
+        // Format - RENTED|CURRENTTHEME|THEME1,THEME2,THEME3
+        public static UnitDetails getAllDetails(string _url)
+        {
+            UnitDetails unitDetails = new UnitDetails();
+
+            string x = string.Empty;
+
+            int rented = 2;
+
+            try
+            {
+                var response = HTTPLogic.Post(_url, new NameValueCollection() { { "action", "getalldetails" } } );
+
+                x = System.Text.Encoding.UTF8.GetString(response);
+
+                string[] splitValue = x.Split(',');
+
+                if (splitValue[0].ToLower() == "no unit linked" || splitValue[0] == string.Empty)
+                {
+                    rented = 0;
+                }
+                else
+                {
+                    string[] split = x.Split('|');
+
+                    if (Decimal.Parse(split[1].ToString()) == 0)
+                    {
+                        rented = 1;
+                    }
+                }
+
+                switch (rented)
+                {
+                    case 0:
+                        unitDetails.rented = "Not linked";
+                        break;
+                    case 1:
+                        unitDetails.rented = "Not Rented";
+                        break;
+                    case 2:
+                        unitDetails.rented = "Rented";
+                        break;
+                    default:
+                        unitDetails.rented = "Error";
+                        break;
+
+                }
+
+                unitDetails.currentTexture = splitValue[1];
+
+                unitDetails.themesList = splitValue[2].Split(':');
+
+            }
+            catch
+            {
+            }
+
+            return unitDetails;
         }
     }
 }

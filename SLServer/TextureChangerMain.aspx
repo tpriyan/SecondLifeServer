@@ -26,7 +26,6 @@
         <br />
         <br />
         <asp:Button ID="BtnSignOut" runat="server" Text="Sign out" Width="300px" OnClick="BtnSignOut_Click" />
-            <asp:Button ID="BtnSettings" runat="server" Text="Settings" OnClick="BtnSettings_Click" style="text-align: center" Width="300px" Visible ="false" />
         <br />
         <br />
             </div>
