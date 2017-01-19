@@ -103,7 +103,7 @@ namespace TextureChanger.Logic
             }
         
 
-        public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState)
+        public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState, string ownerId = "")
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadAll;
             System.Data.DataTable dataTable = DataTableUnits();
@@ -114,7 +114,14 @@ namespace TextureChanger.Logic
                 using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
                 {
                     con.Open();
-                    com.CommandText = String.Format(sqlQueryRead, _sessionState["ownerid"].ToString());
+                    if (ownerId != "")
+                    {
+                        com.CommandText = String.Format(sqlQueryRead, ownerId);
+                    }
+                    else
+                    {
+                        com.CommandText = String.Format(sqlQueryRead, _sessionState["ownerid"].ToString());
+                    }
                     using (System.Data.SQLite.SQLiteDataReader reader = com.ExecuteReader())
                     {
                         while (reader.Read())
@@ -135,6 +142,7 @@ namespace TextureChanger.Logic
             return dataTable;
         }
 
+        
 
         public static DataTable readLinkedData(string _objectGUID, string databasePath = "")
         {
@@ -251,7 +259,26 @@ namespace TextureChanger.Logic
 
     public class CRUDOperations
     {
-        public static BaseEnums.URLStatus createOrUpdateURL(string objectGuid, string URL, string OwnerName, string type, string ObjectName, string rentalUnitId, string isInitialCall)
+
+        public static string getUnitsList(string ownerid)
+        {
+            DataTable dt = DataBaseStaging.ReadData(null, ownerid);
+            string unitsList = String.Empty;
+            foreach (DataRow dr in dt.Rows)
+            {
+                if (unitsList == "")
+                {
+                    unitsList = dr["ObjectGUID"].ToString();
+                }
+                else
+                {
+                    unitsList += "," + dr["ObjectGUID"].ToString();
+                }
+            }
+            return unitsList;
+        }
+
+        public static BaseEnums.URLStatus createOrUpdateURL(string objectGuid, string URL, string OwnerName, string type, string ObjectName, string rentalUnitId, string isInitialCall, string version)
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadFilterObjectId;
             string sqlQueryInsert = TextureChanger.Constants.QueryInsert;
@@ -284,7 +311,7 @@ namespace TextureChanger.Logic
                                 else
                                 {
                                     reader.Close();
-                                    com.CommandText = String.Format(sqlQueryUpdate, URL, ObjectName, type, OwnerName, rentalUnitId, objectGuid);
+                                    com.CommandText = String.Format(sqlQueryUpdate, URL, ObjectName, type, OwnerName, rentalUnitId, objectGuid, version);
                                     com.ExecuteNonQuery();
                                     status = BaseEnums.URLStatus.Updated;
                                 }
@@ -301,7 +328,7 @@ namespace TextureChanger.Logic
                                 else
                                 {
                                     reader.Close();
-                                    com.CommandText = String.Format(TextureChanger.Constants.QueryUpdateNoLinkedUnit, URL, ObjectName, type, OwnerName, objectGuid);
+                                    com.CommandText = String.Format(TextureChanger.Constants.QueryUpdateNoLinkedUnit, URL, ObjectName, type, OwnerName, objectGuid, version);
 
                                     com.ExecuteNonQuery();
                                     status = BaseEnums.URLStatus.Updated;
@@ -313,7 +340,7 @@ namespace TextureChanger.Logic
                         else
                         {
                             reader.Close();
-                            com.CommandText = String.Format(sqlQueryInsert, objectGuid, URL, ObjectName, type, OwnerName, rentalUnitId);
+                            com.CommandText = String.Format(sqlQueryInsert, objectGuid, URL, ObjectName, type, OwnerName, rentalUnitId, version);
                             com.ExecuteNonQuery();
                             status = BaseEnums.URLStatus.Created;
                         }

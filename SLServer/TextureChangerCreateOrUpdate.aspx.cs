@@ -9,7 +9,8 @@ public partial class CreateOrUpdate : System.Web.UI.Page
             && Request.Params["type"] != null
             && Request.Params["owner"] != null
              && Request.Params["IsInitialCall"] != null
-            && Request.Params["LinkedRentalUnitId"] != null)
+            && Request.Params["LinkedRentalUnitId"] != null &&
+            Request.Params["version"] != null)
         {
             try
             {
@@ -19,7 +20,8 @@ public partial class CreateOrUpdate : System.Web.UI.Page
                                          Request.Params["type"].ToString(),
                                          Request.Params["name"].ToString(),
                                         Request.Params["LinkedRentalUnitId"].ToString(),
-                                        Request.Params["isinitialcall"].ToString());
+                                        Request.Params["isinitialcall"].ToString(),
+                                        Request.Params["version"].ToString());
 
 
                 Response.Write("OK");
