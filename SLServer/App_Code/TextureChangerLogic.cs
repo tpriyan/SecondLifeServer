@@ -37,7 +37,7 @@ namespace TextureChanger.Logic
 
         public static  DataTable GetUnitsDataTable(System.Web.SessionState.HttpSessionState _sessionState)
         {
-            GlobalSettings settings = Settings.getSettings();
+            //GlobalSettings settings = Settings.getSettings();
             DataTable dt = ReadData(_sessionState);
 
             foreach (DataRow dr in dt.Rows)
@@ -53,9 +53,9 @@ namespace TextureChanger.Logic
         }
 
         #region ObsoleteCode
-        public static async Task<Boolean> LoadDataAsync(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
+        /*public static async Task<Boolean> LoadDataAsync(System.Web.UI.WebControls.GridView gridView, System.Web.SessionState.HttpSessionState _sessionState)
         {
-            GlobalSettings settings = Settings.getSettings();
+            //GlobalSettings settings = Settings.getSettings();
             DataTable dt = ReadData(_sessionState);
             List<Task> TaskList = new List<Task>();
 
@@ -117,7 +117,7 @@ namespace TextureChanger.Logic
             else
                 dr["CurrentTheme"] = TextureChanger.HTTPLogic.getCurrentTexture(dr["URL"].ToString());
 
-            }
+            }*/
 
         #endregion
         public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState, string ownerId = "")
