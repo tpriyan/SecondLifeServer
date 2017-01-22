@@ -24,6 +24,17 @@ public partial class _Default : System.Web.UI.Page
         }
     }
 
+
+    protected void OnRowDataBound(object sender, GridViewRowEventArgs e)
+    {
+        if (e.Row.RowType == DataControlRowType.DataRow)
+        {
+            
+            //gvOrders.DataBind();
+        }
+    }
+
+
     protected void GridView1_RowDataBound(object sender, GridViewRowEventArgs e)
     {
         if (e.Row.RowType == DataControlRowType.DataRow)
@@ -37,17 +48,37 @@ public partial class _Default : System.Web.UI.Page
 
             for (int i = 0; i < tmp.Length; i++)
             {
+                if (tmp[i] == string.Empty)
+                    continue;
                 Button b1 = new Button();
                 b1.Text = tmp[i];
                 b1.Click += new EventHandler(this.TextureChange_Click);
                 ph3.Controls.Add(b1);
             }
+
+            Button b12 = new Button();
+            b12.Text = "Set defaults";
+
+            b12.Click += new EventHandler(this.TextureChange_Click);
+            ph3.Controls.Add(b12);
+
             if (tmp.Length == 0)
             {
                 Label l = new Label();
                 l.Text = "No themes";
                 ph3.Controls.Add(l);
             }
+
+            GridViewRow gvr = e.Row;
+            HiddenField field = (HiddenField)gvr.FindControl("IdHiddenFieldGuid");
+
+            string objectGuid = field.Value.ToString();
+
+            GridView gvOrders = e.Row.FindControl("gvOrders") as GridView;
+
+
+            gvOrders.DataSource = TextureChanger.Logic.DataBaseStaging.readLinkedData(objectGuid);
+            gvOrders.DataBind();
         }
     }
 
@@ -63,8 +94,15 @@ public partial class _Default : System.Web.UI.Page
 
         string url = field.Value.ToString();
 
-        TextureChanger.HTTPLogic.setTheme(btn.Text, url);
-
+        if(btn.Text == "Set defaults")
+        {
+            HiddenField fldGuid = (HiddenField)gvr.FindControl("IdHiddenFieldGuid");
+            TextureChanger.Logic.CRUDOperations.setDefaultTheme(Session, fldGuid.Value);
+        }
+        else
+        { 
+            TextureChanger.HTTPLogic.setTheme(btn.Text, url);
+        }
         loadData();
     }
 
@@ -168,6 +206,32 @@ public partial class _Default : System.Web.UI.Page
                     }
                 }
             }
+        }
+    }
+
+    protected void Lnk_LogOut_Click(object sender, EventArgs e)
+    {
+        TextureChanger.SessionHandler.logOut(Session, Response);
+    }
+
+
+
+
+
+    protected void btnApplyPageSize_Click(object sender, EventArgs e)
+    {
+        if (DropDownList1.SelectedValue == "All")
+        {
+            GridView1.AllowPaging = false;
+            GridView1.DataSource = (DataTable)ViewState["Table"];
+            GridView1.DataBind();
+        }
+        else
+        {
+            GridView1.AllowPaging = true;
+            GridView1.PageSize =  Int32.Parse(DropDownList1.SelectedValue);
+            GridView1.DataSource = (DataTable)ViewState["Table"];
+            GridView1.DataBind();
         }
     }
 }

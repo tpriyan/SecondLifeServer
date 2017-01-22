@@ -69,5 +69,12 @@ namespace TextureChanger
 
             return false;
         }
+
+        public static void logOut(System.Web.SessionState.HttpSessionState _sessionState, System.Web.HttpResponse _response)
+        {
+            _sessionState.Clear();
+            _response.Redirect("Login.aspx");
+
+        }
     }
 }

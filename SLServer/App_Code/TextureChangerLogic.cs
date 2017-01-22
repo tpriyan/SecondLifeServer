@@ -15,6 +15,9 @@ namespace TextureChanger.Logic
             dt.Columns.Add("ObjectGUID");
             dt.Columns.Add("LinkedObjectGUID");
             dt.Columns.Add("TextureName");
+            dt.Columns.Add("ObjectName");
+            dt.Columns.Add("ObjectType");
+
 
             return dt;
         }
@@ -31,6 +34,7 @@ namespace TextureChanger.Logic
             dt.Columns.Add("RentedStatus");
             dt.Columns.Add("ThemesAvailable");
             dt.Columns.Add("DefTheme");
+            dt.Columns.Add("Version");
 
             return dt;
         }
@@ -46,7 +50,8 @@ namespace TextureChanger.Logic
 
                 dr["CurrentTheme"] = details.currentTexture;
                 dr["RentedStatus"] = details.rented;
-                dr["ThemesAvailable"] = details.themesList;
+                if(details.themesList != null)
+                    dr["ThemesAvailable"] = string.Join(",", details.themesList); 
             }
 
             return dt;
@@ -150,6 +155,7 @@ namespace TextureChanger.Logic
                             dataRow[3] = reader.GetValue(3);
                             if(reader["DefTheme"] != null)
                                 dataRow["DefTheme"] = reader["DefTheme"].ToString();
+                            dataRow["Version"] = reader["Version"];
                             dataTable.Rows.Add(dataRow);
                         }
                     }
@@ -184,6 +190,8 @@ namespace TextureChanger.Logic
                             dataRow[0] = reader.GetValue(0);
                             dataRow[1] = reader.GetValue(1);
                             dataRow[2] = reader.GetValue(2);
+                            dataRow[3] = reader.GetValue(3);
+                            dataRow[4] = reader.GetValue(4);
 
 
                             dt.Rows.Add(dataRow);
@@ -224,7 +232,8 @@ namespace TextureChanger.Logic
         {
             DataTable linkedUnits = null;
 
-            if (HTTPLogic.isRented(dr["URL"].ToString()) == 1) // not rented
+            UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+            if (details.rented == "Not Rented") // not rented
             {
                 if (_themeName == "")
                 {
@@ -252,8 +261,9 @@ namespace TextureChanger.Logic
 
             foreach (DataRow dr in table.Rows)
             {
-                if (HTTPLogic.isRented(dr["URL"].ToString()) == 1) // not rented
-                {
+                UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+                if (details.rented == "Not Rented") // not rented
+                { 
                     if (_themeName == "")
                         _themeName = dr["DefTheme"].ToString();
                     HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
@@ -395,16 +405,32 @@ namespace TextureChanger.Logic
             return retValue;
         }
 
-        public static BaseEnums.URLStatus addLinkedUnit(string _sourceGUID, string _childGUID, string _theme)
+        public static BaseEnums.URLStatus addRemoveLinkedUnit(string _sourceGUID, string _childGUID, string _theme, string _objectName, string _objectType, string _clear)
         {
             string sqlQueryRead = @"select * from DefTextureLinkedObjects where ObjectGuid = '{0}' 
                 and LinkedObjectGUID = '{1}'";
-            string sqlQueryInsert = @"insert into DefTextureLinkedObjects(ObjectGuid,LinkedObjectGUID, TextureName) 
-                                        values('{0}','{1}','{2}')";
-            string sqlQueryUpdate = @"update DefTextureLinkedObjects set TextureName='{0}' where ObjectGuid = '{1}' 
+            string sqlQueryInsert = @"insert into DefTextureLinkedObjects(ObjectGuid,LinkedObjectGUID, TextureName, ObjectName, ObjectType) 
+                                        values('{0}','{1}','{2}','{3}','{4}')";
+            string sqlQueryUpdate = @"update DefTextureLinkedObjects set TextureName='{0}',ObjectName='{3}', ObjectType='{4}'  where ObjectGuid = '{1}' 
                 and LinkedObjectGUID = '{2}'";
 
+            string sqlClearLinkedUnits = "delete * from DefTextureLinkedObjects where ObjectGuid = '{0}'";
+
             BaseEnums.URLStatus status;
+
+            if (_clear == "true")
+            {
+                using (System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("data source=" + HttpContext.Current.Server.MapPath("~/App_Data/" + TextureChanger.Variables.DatabaseName)))
+                {
+                    using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
+                    {
+                        con.Open();
+
+                        com.CommandText = String.Format(sqlClearLinkedUnits, _sourceGUID);
+                    }
+                }
+                return BaseEnums.URLStatus.Deleted;
+            }
 
             using (System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("data source=" + HttpContext.Current.Server.MapPath("~/App_Data/" + TextureChanger.Variables.DatabaseName)))
             {
@@ -418,7 +444,9 @@ namespace TextureChanger.Logic
                     {
                         if (reader.Read())
                         {
-                            if (reader["defaulttheme"].ToString() == _theme)
+                            if (reader["defaulttheme"].ToString() == _theme &&
+                                reader["ObjectName"].ToString() == _objectName &&
+                                reader["ObjectType"].ToString() == _objectType)
 
                             {
                                 status = BaseEnums.URLStatus.AlreadyUpdate;
@@ -426,7 +454,7 @@ namespace TextureChanger.Logic
                             else
                             {
                                 reader.Close();
-                                com.CommandText = String.Format(sqlQueryUpdate, _theme, _sourceGUID, _childGUID);
+                                com.CommandText = String.Format(sqlQueryUpdate, _theme, _sourceGUID, _childGUID, _objectName, _objectType);
                                 com.ExecuteNonQuery();
                                 status = BaseEnums.URLStatus.Updated;
                             }
@@ -434,7 +462,7 @@ namespace TextureChanger.Logic
                         else
                         {
                             reader.Close();
-                            com.CommandText = String.Format(sqlQueryInsert, _sourceGUID, _childGUID, _theme);
+                            com.CommandText = String.Format(sqlQueryInsert, _sourceGUID, _childGUID, _theme, _objectName, _objectType);
 
                             com.ExecuteNonQuery();
                             status = BaseEnums.URLStatus.Created;
@@ -444,6 +472,103 @@ namespace TextureChanger.Logic
                 }
             }
             return status;
+        }
+
+        public static string ListLinkedUnits(string _sourceGUID)
+        {
+            string sqlQueryRead = @"select * from DefTextureLinkedObjects where ObjectGuid = '{0}' 
+                and LinkedObjectGUID = '{1}'";
+
+            string response = string.Empty;
+ 
+            using (System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("data source=" + HttpContext.Current.Server.MapPath("~/App_Data/" + TextureChanger.Variables.DatabaseName)))
+            {
+                using (System.Data.SQLite.SQLiteCommand com = new System.Data.SQLite.SQLiteCommand(con))
+                {
+                    con.Open();
+
+                    com.CommandText = String.Format(sqlQueryRead, _sourceGUID);
+
+                    using (System.Data.SQLite.SQLiteDataReader reader = com.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if(response != string.Empty)
+                            {
+                                response += "\n";
+                            }
+
+                            response += "Object Name:" + reader["ObjectName"].ToString() + 
+                                "\nObject Type:" + reader["ObjectType"].ToString() +
+                                "\nLinked Object GUID:" + reader["LinkedObjectGUID"].ToString() +
+                                "\nDefault Texture/ Default scene:" + reader["TextureName"].ToString();
+                        }
+                    }
+                }
+            }
+            return response;
+        }
+
+        public static Boolean setDefaultTheme(System.Web.SessionState.HttpSessionState _sessionState, string _objectGuid)
+        {
+
+            DataTable table = DataBaseStaging.ReadData(_sessionState);
+
+            foreach (DataRow dr in table.Rows)
+            {
+                if(dr["ObjectGUID"].ToString() == _objectGuid)
+                {
+                    DataTable linkedUnits = null;
+
+                    UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+
+                    if (details.rented == "Not Rented") // not rented
+                    {
+                        
+                        if (dr["DefTheme"] != null && dr["DefTheme"].ToString() != string.Empty)
+                        {
+                            HTTPLogic.setTheme(dr["DefTheme"].ToString(), dr["URL"].ToString());
+                        }
+
+                        // reset the nearby objects
+                        linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString());
+                        foreach (DataRow dr1 in linkedUnits.Rows)
+                        {
+                            HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                        }
+
+                    }
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        public static void doTask(DataRow dr, string _themeName, string path)
+        {
+            DataTable linkedUnits = null;
+
+            UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+            if (details.rented == "Not Rented") // not rented
+            {
+                if (_themeName == "")
+                {
+                    if (dr["DefTheme"] != null)
+                        _themeName = dr["DefTheme"].ToString();
+                }
+
+                if (_themeName != "")
+                    HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
+
+                // reset the nearby objects
+                linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString(), path);
+                foreach (DataRow dr1 in linkedUnits.Rows)
+                {
+                    HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                }
+
+            }
         }
     }
 }

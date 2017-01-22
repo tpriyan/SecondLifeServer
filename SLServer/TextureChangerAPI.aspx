@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="TextureChangerAddChild.aspx.cs" Inherits="TextureChangerAddChild" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="TextureChangerAPI.aspx.cs" Inherits="TextureChangerAPI" %>
 
 <!DOCTYPE html>
 

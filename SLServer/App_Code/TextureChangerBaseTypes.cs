@@ -11,7 +11,8 @@ namespace TextureChanger.BaseTypes
         {
             AlreadyUpdate,
             Updated,
-            Created
+            Created,
+            Deleted,
         }
     }
 }
