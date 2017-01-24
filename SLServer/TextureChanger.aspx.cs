@@ -113,7 +113,7 @@ public partial class _Default : System.Web.UI.Page
 
     protected void BtnHome_Click(object sender, EventArgs e)
     {
-        Response.Redirect("TextureChangerMain.aspx");
+        Response.Redirect("TextureChangerHome.aspx");
     }
 
     protected void BtnSignOut_Click(object sender, EventArgs e)

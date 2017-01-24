@@ -41,7 +41,7 @@
         </div>
         <div align="center">
         <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" OnRowDataBound="GridView1_RowDataBound" Width="80%" HorizontalAlign="Center" 
-            HeaderStyle-Font-Bold="true"  PageSize ="10" AllowPaging="true" OnPageIndexChanging="GridView1_PageIndexChanging" OnRowCommand="GridView1_RowCommand" OnRowCreated="GridView1_RowCreated">
+            HeaderStyle-Font-Bold="true"  PageSize ="100" AllowPaging="true" OnPageIndexChanging="GridView1_PageIndexChanging" OnRowCommand="GridView1_RowCommand" OnRowCreated="GridView1_RowCreated">
             <Columns>
                 <asp:TemplateField>
             <ItemTemplate>
@@ -79,7 +79,7 @@
                     </ItemTemplate>
                 </asp:TemplateField>
 
-                <asp:TemplateField ItemStyle-Width ="15%">
+                <asp:TemplateField ItemStyle-Width ="10%">
                     <HeaderTemplate>
                         <asp:LinkButton ID="LnkBtnTexture" runat="server" Text="Current Theme" CommandName="Sort" CommandArgument="CurrentTheme"></asp:LinkButton>
                     </HeaderTemplate>
@@ -100,7 +100,7 @@
                     
                 </asp:TemplateField>
 
-                 <asp:TemplateField ItemStyle-Width ="10%">
+                 <asp:TemplateField ItemStyle-Width ="5%">
                     <HeaderTemplate>
                         <asp:LinkButton ID="LnkBtnRented" runat="server" Text="Version" CommandName="Sort" CommandArgument="Version"></asp:LinkButton>
                     </HeaderTemplate>
@@ -110,7 +110,7 @@
                     
                 </asp:TemplateField>
 
-                <asp:TemplateField ItemStyle-Width ="30%">
+                <asp:TemplateField ItemStyle-Width ="40%">
                     <HeaderTemplate>
                         <asp:Label ID="Label13" runat="server" Text='Set Texture themes'></asp:Label>
                     </HeaderTemplate>

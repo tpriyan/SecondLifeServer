@@ -61,7 +61,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            catch
+            catch(Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();
@@ -101,7 +101,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            catch
+            catch (Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();
@@ -126,7 +126,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            catch
+            catch (Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();
@@ -157,7 +157,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            catch
+            catch (Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();
@@ -194,7 +194,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.SuppressContent = true;
 
             }
-            catch
+            catch (Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();
@@ -222,7 +222,7 @@ public partial class TextureChangerAPI : System.Web.UI.Page
                 Response.Flush();
                 Response.SuppressContent = true;
             }
-            catch
+            catch (Exception e)
             {
                 Response.Write("UNKNOWNEXCEPTION");
                 Response.Flush();

@@ -125,6 +125,7 @@ namespace TextureChanger.Logic
             }*/
 
         #endregion
+
         public static DataTable ReadData(System.Web.SessionState.HttpSessionState _sessionState, string ownerId = "")
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadAll;
@@ -169,7 +170,7 @@ namespace TextureChanger.Logic
         {
             DataTable dt = DataTableLinkedUnits();
 
-            string sqlQueryRead = "select * from DefTextureLinkedObjects where ObjectGuid = '{0}'";
+            string sqlQueryRead = "select * from InWorldLinkedObjects where ObjectGuid = '{0}'";
 
             System.Data.DataRow dataRow = null;
             if(databasePath == "")
@@ -206,29 +207,57 @@ namespace TextureChanger.Logic
     
     public class BulkOperations
     {
-        public static async Task<Boolean> bulkSetThemeUnrentedAsync(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
+        public static Boolean bulkSetThemeUnrentedAsync(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
         {
 
             DataTable table = DataBaseStaging.ReadData(_sessionState);
-            
+
             List<Task> TaskList = new List<Task>();
 
             //  TaskList.Add(LastTask);
             string path = HttpContext.Current.Server.MapPath("~/App_Data/");
 
-           //ask.WaitAll(TaskList.ToArray());
+            //ask.WaitAll(TaskList.ToArray());
 
             foreach (DataRow dr in table.Rows)
             {
-                var LastTask = Task.Run(()=> doTask(dr, _themeName, path));
-                TaskList.Add(LastTask);
+                DataTable linkedUnits = null;
+
+                UnitDetails details = HTTPLogic.getAllDetails(dr["URL"].ToString());
+                if (details.rented == "Not Rented") // not rented
+                {
+                    if (_themeName == "")
+                    {
+                        if (dr["DefTheme"] != null)
+                            _themeName = dr["DefTheme"].ToString();
+                    }
+
+                    if (_themeName != "")
+                        HTTPLogic.setTheme(_themeName, dr["URL"].ToString());
+
+                    // reset the nearby objects
+                    linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString(), path);
+                    foreach (DataRow dr1 in linkedUnits.Rows)
+                    {
+                        if (dr1["ObjectType"].ToString() == "Scenery")
+                        {
+                            HTTPLogic.setNearbyScenery(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                        }
+                        else if (dr1["ObjectType"].ToString() == "Multiscene")
+                        {
+                            HTTPLogic.setNearbyMultiScene(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                        }
+                    }
+
+                }
             }
 
-            Task.WaitAll(TaskList.ToArray());
+            // Task.WaitAll(TaskList.ToArray());
 
             return true;
         }
-        public static void doTask(DataRow dr, string _themeName, string path)
+
+        /*public static void doTask(DataRow dr, string _themeName, string path)
         {
             DataTable linkedUnits = null;
 
@@ -248,13 +277,21 @@ namespace TextureChanger.Logic
                 linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString(), path);
                 foreach (DataRow dr1 in linkedUnits.Rows)
                 {
-                    HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                    if (dr["ObjectType"].ToString() == "Scenery")
+                    {
+                        HTTPLogic.setNearbyScenery(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                    }
+                    else if(dr["ObjectType"].ToString() == "Multiscene")
+                    {
+                        HTTPLogic.setNearbyMultiScene(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                    }
                 }
 
             }
-        }
+        }*/
 
-        public static void bulkSetThemeUnrented(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
+        #region ObsoleteCode
+        /*public static void bulkSetThemeUnrented(System.Web.SessionState.HttpSessionState _sessionState, string _themeName = "")
         {
             DataTable table = DataBaseStaging.ReadData(_sessionState);
             DataTable linkedUnits = null;
@@ -272,13 +309,21 @@ namespace TextureChanger.Logic
                     linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString());
                     foreach (DataRow dr1 in linkedUnits.Rows)
                     {
-                        HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                        if (dr1["ObjectType"].ToString() == "Scenery")
+                        {
+                            HTTPLogic.setNearbyScenery(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                        }
+                        else if (dr1["ObjectType"].ToString() == "Multiscene")
+                        {
+                            HTTPLogic.setNearbyMultiScene(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                        }
                     }
 
                 }
             }
 
-        }
+        }*/
+        #endregion
     }
 
     public class CRUDOperations
@@ -374,8 +419,7 @@ namespace TextureChanger.Logic
             }
             return status;
         }
-
-
+        
         public static string getLinkedRentalUnitGUID(string objectGuid)
         {
             string sqlQueryRead = TextureChanger.Constants.QueryReadFilterObjectId;
@@ -407,14 +451,14 @@ namespace TextureChanger.Logic
 
         public static BaseEnums.URLStatus addRemoveLinkedUnit(string _sourceGUID, string _childGUID, string _theme, string _objectName, string _objectType, string _clear)
         {
-            string sqlQueryRead = @"select * from DefTextureLinkedObjects where ObjectGuid = '{0}' 
+            string sqlQueryRead = @"select * from InWorldLinkedObjects where ObjectGuid = '{0}' 
                 and LinkedObjectGUID = '{1}'";
-            string sqlQueryInsert = @"insert into DefTextureLinkedObjects(ObjectGuid,LinkedObjectGUID, TextureName, ObjectName, ObjectType) 
+            string sqlQueryInsert = @"insert into InWorldLinkedObjects(ObjectGuid,LinkedObjectGUID, TextureName, ObjectName, ObjectType) 
                                         values('{0}','{1}','{2}','{3}','{4}')";
-            string sqlQueryUpdate = @"update DefTextureLinkedObjects set TextureName='{0}',ObjectName='{3}', ObjectType='{4}'  where ObjectGuid = '{1}' 
+            string sqlQueryUpdate = @"update InWorldLinkedObjects set TextureName='{0}',ObjectName='{3}', ObjectType='{4}'  where ObjectGuid = '{1}' 
                 and LinkedObjectGUID = '{2}'";
 
-            string sqlClearLinkedUnits = "delete * from DefTextureLinkedObjects where ObjectGuid = '{0}'";
+            string sqlClearLinkedUnits = "delete * from InWorldLinkedObjects where ObjectGuid = '{0}'";
 
             BaseEnums.URLStatus status;
 
@@ -476,8 +520,7 @@ namespace TextureChanger.Logic
 
         public static string ListLinkedUnits(string _sourceGUID)
         {
-            string sqlQueryRead = @"select * from DefTextureLinkedObjects where ObjectGuid = '{0}' 
-                and LinkedObjectGUID = '{1}'";
+            string sqlQueryRead = @"select * from InWorldLinkedObjects where ObjectGuid = '{0}'";
 
             string response = string.Empty;
  
@@ -534,7 +577,14 @@ namespace TextureChanger.Logic
                         linkedUnits = DataBaseStaging.readLinkedData(dr[0].ToString());
                         foreach (DataRow dr1 in linkedUnits.Rows)
                         {
-                            HTTPLogic.setNearbyTheme(dr1[1].ToString(), dr["URL"].ToString(), dr1[2].ToString());
+                            if (dr1["ObjectType"].ToString() == "Scenery")
+                            {
+                                HTTPLogic.setNearbyScenery(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                            }
+                            else if (dr1["ObjectType"].ToString() == "Multiscene")
+                            {
+                                HTTPLogic.setNearbyMultiScene(dr1["LinkedObjectGUID"].ToString(), dr["URL"].ToString(), dr1["TextureName"].ToString());
+                            }
                         }
 
                     }
@@ -545,7 +595,7 @@ namespace TextureChanger.Logic
             return true;
         }
 
-        public static void doTask(DataRow dr, string _themeName, string path)
+        /*public static void doTask(DataRow dr, string _themeName, string path)
         {
             DataTable linkedUnits = null;
 
@@ -569,6 +619,6 @@ namespace TextureChanger.Logic
                 }
 
             }
-        }
+        }*/
     }
 }

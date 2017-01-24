@@ -10,7 +10,7 @@ public partial class Login : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         if (TextureChanger.SessionHandler.IsSessionValid(Session, Response))
-            Response.Redirect("TextureChangerMain.aspx");
+            Response.Redirect("TextureChangerHome.aspx");
 
     }
 
@@ -27,7 +27,7 @@ public partial class Login : System.Web.UI.Page
     protected void ValidateUser(object sender, EventArgs e)
     {
         if (TextureChanger.SessionHandler.login(Login1.UserName, Login1.Password, Session))
-            Response.Redirect("TextureChangerMain.aspx");
+            Response.Redirect("TextureChangerHome.aspx");
         else
             Login1.FailureText = "Username or password incorrect!";
             

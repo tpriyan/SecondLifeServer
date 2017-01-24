@@ -21,7 +21,7 @@ public partial class TextureChangerSetDefTheme : System.Web.UI.Page
 
     protected void Button2_Click(object sender, EventArgs e)
     {
-        Response.Redirect("TextureChangerMain.aspx");
+        Response.Redirect("TextureChangerHome.aspx");
     }
 
     protected void BtnSignOut_Click(object sender, EventArgs e)
